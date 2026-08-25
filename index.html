@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#1B5FA8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="My English">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>My English — 200 frases</title>
+<style>
+  :root {
+    --bg: #F5F4F0; --surface: #ffffff; --line: #e4e2db;
+    --text: #1a1a1a; --muted: #6b6b6b; --faint: #a5a5a0;
+    --c1: #1B5FA8; --c2: #2E7D32; --c3: #E8681C; --c4: #6B3FA0; --c5: #12777A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #17171a; --surface: #232327; --line: #35353b; --text: #f0efec; --muted: #a8a8a4; --faint: #74747a; }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    overscroll-behavior-y: contain; -webkit-user-select: none; user-select: none;
+  }
+  #app { min-height: 100%; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--surface); position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 17px; font-weight: 600; margin: 0; flex: 1; line-height: 1.25; }
+  .iconbtn { width: 38px; height: 38px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--text); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  main { flex: 1; padding: 16px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .hero { font-size: 13px; color: var(--muted); margin: 0 0 18px; }
+  .deckcard { display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; cursor: pointer; color: var(--text); }
+  .deckcard .tag { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; padding: 3px 10px; border-radius: 999px; margin-bottom: 8px; }
+  .deckcard h2 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+  .deckcard p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.45; }
+
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin: 0 -16px 12px; padding-left: 16px; padding-right: 16px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; font-size: 13px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; white-space: nowrap; }
+  .chip.on { background: var(--c1); border-color: var(--c1); color: #fff; }
+
+  .stage { perspective: 1200px; margin-bottom: 14px; }
+  .card { position: relative; min-height: 300px; cursor: pointer; }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 52px 20px 46px; text-align: center; transition: transform .45s; }
+  .back { transform: rotateY(180deg); }
+  .card.flipped .front { transform: rotateY(-180deg); }
+  .card.flipped .back { transform: rotateY(0deg); }
+  .badge { position: absolute; top: 14px; left: 14px; font-size: 11px; font-weight: 700; color: #fff; padding: 4px 11px; border-radius: 999px; }
+  .en { font-size: 25px; font-weight: 600; line-height: 1.35; }
+  .pt { font-size: 19px; line-height: 1.4; }
+  .pron { font-size: 15px; color: var(--muted); margin-top: 12px; font-style: italic; line-height: 1.4; }
+  .struct { position: absolute; bottom: 34px; left: 16px; right: 16px; font-size: 11px; color: var(--faint); font-family: ui-monospace, Consolas, monospace; }
+  .hint { position: absolute; bottom: 12px; left: 0; right: 0; font-size: 11px; color: var(--faint); }
+  .speak { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+  .nav { display: flex; align-items: center; gap: 10px; }
+  .nav button { flex: 1; font: inherit; font-size: 15px; padding: 13px 0; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+  .counter { flex: 0 0 auto; font-size: 13px; color: var(--muted); min-width: 76px; text-align: center; }
+  .progress { height: 4px; background: var(--line); border-radius: 999px; margin: 14px 0 0; overflow: hidden; }
+  .progress i { display: block; height: 100%; background: var(--c1); width: 0; transition: width .25s; }
+
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .row label { font-size: 15px; }
+  .row .val { font-size: 13px; color: var(--muted); }
+  select, input[type=range] { font: inherit; font-size: 14px; max-width: 58%; }
+  select { padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+  .note { font-size: 13px; color: var(--muted); line-height: 1.6; margin-top: 20px; }
+  .wide { width: 100%; font: inherit; font-size: 15px; padding: 13px 0; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--text); margin-top: 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button class="iconbtn" id="btnBack" style="display:none" aria-label="Voltar">‹</button>
+    <h1 id="title">My English</h1>
+    <button class="iconbtn" id="btnSettings" aria-label="Configurações">⚙</button>
+  </header>
+  <main>
+    <section class="screen active" id="scHome">
+      <p class="hero">200 frases · inglês, tradução e pronúncia · funciona offline</p>
+      <div id="deckList"></div>
+    </section>
+
+    <section class="screen" id="scDeck">
+      <div class="chips" id="chips"></div>
+      <div class="stage">
+        <div class="card" id="card">
+          <div class="face front">
+            <span class="badge" id="b1"></span>
+            <button class="speak" id="s1" aria-label="Ouvir">🔊</button>
+            <div class="en" id="enText"></div>
+            <div class="hint">toque para ver a tradução</div>
+          </div>
+          <div class="face back">
+            <span class="badge" id="b2"></span>
+            <button class="speak" id="s2" aria-label="Ouvir">🔊</button>
+            <div class="pt" id="ptText"></div>
+            <div class="pron" id="pronText"></div>
+            <div class="struct" id="structText"></div>
+            <div class="hint">toque para voltar</div>
+          </div>
+        </div>
+      </div>
+      <div class="nav">
+        <button id="prev">← Anterior</button>
+        <span class="counter" id="counter"></span>
+        <button id="next">Próxima →</button>
+      </div>
+      <div class="progress"><i id="bar"></i></div>
+      <button class="wide" id="shuffle">Embaralhar</button>
+    </section>
+
+    <section class="screen" id="scSettings">
+      <div class="row"><label for="voice">Voz</label><select id="voice"></select></div>
+      <div class="row"><label for="rate">Velocidade</label><input type="range" id="rate" min="0.4" max="1.1" step="0.1" value="0.7"><span class="val" id="rateOut">0.7</span></div>
+      <div class="row"><label for="autosay">Falar ao virar</label><input type="checkbox" id="autosay"></div>
+      <p class="note">A leitura em voz alta usa as vozes do seu celular. No Android, instale vozes em inglês em Configurações → Idiomas → Saída de conversão de texto em voz. No iPhone, em Ajustes → Acessibilidade → Conteúdo Falado → Vozes.</p>
+      <p class="note" id="swInfo"></p>
+    </section>
+  </main>
+</div>
+
+<script>
+const COLORS = ['#1B5FA8','#2E7D32','#E8681C','#6B3FA0','#12777A'];
+
+const DECKS = [
+{ id:1, name:'DECK 1', title:'Numbers, Days, Months & Dates', desc:'Números cardinais e ordinais, dias da semana, meses, datas', color:'#1B5FA8',
+  cats:['Cardinal','Ordinal','Days','Months','Dates'],
+  items:[
+[1,1,"I have one brother.","Eu tenho um irmão.","ai RÉV uan BRÁ-der",""],
+[2,1,"I have two sisters.","Eu tenho duas irmãs.","ai RÉV tchú SÍS-ters",""],
+[3,1,"I have three meetings today.","Eu tenho três reuniões hoje.","ai RÉV fríi MÍ-tings tu-DÊI",""],
+[4,1,"I work five days a week.","Eu trabalho cinco dias por semana.","ai UÓRK fáiv DÊIS a UÍK",""],
+[5,1,"We have ten developers.","Nós temos dez desenvolvedores.","uí RÉV TÉN de-VÉ-lo-pers",""],
+[6,1,"I have twenty years of experience.","Eu tenho vinte anos de experiência.","ai RÉV TUÉN-ti IÍRS ov eks-PÍ-ri-ens",""],
+[7,1,"There are five people on my team.","Há cinco pessoas no meu time.","dér ar FÁIV PÍ-pol on mai TÍM",""],
+[8,1,"I go to the gym three times a week.","Eu vou à academia três vezes por semana.","ai GÔU tu de DJIM fríi TÁIMS a UÍK",""],
+[9,1,"I have two meetings on Monday.","Eu tenho duas reuniões na segunda-feira.","ai RÉV tchú MÍ-tings on MÁN-dei",""],
+[10,1,"I usually work eight hours a day.","Eu geralmente trabalho oito horas por dia.","ai IÚ-ju-a-li UÓRK ÊIT Á-uers a DÊI",""],
+[11,2,"My birthday is on the nineteenth.","Meu aniversário é no dia dezenove.","mai BÊRTH-dei is on de nain-TÍNTH",""],
+[12,2,"Today is the first day of the month.","Hoje é o primeiro dia do mês.","tu-DÊI is de FÊRST dêi ov de MÁNTH",""],
+[13,2,"This is my second meeting today.","Esta é minha segunda reunião hoje.","dis is mai SÉ-cond MÍ-ting tu-DÊI",""],
+[14,2,"This is my third project.","Este é meu terceiro projeto.","dis is mai THÊRD PRÓ-djekt",""],
+[15,2,"I am on the fourth floor.","Eu estou no quarto andar.","ai am on de FÓRTH FLÓR",""],
+[16,2,"This is the fifth task.","Esta é a quinta tarefa.","dis is de FÍFTH TÉSK",""],
+[17,2,"This is my sixth year at the company.","Este é meu sexto ano na empresa.","dis is mai SÍKSTH IÍR at de CÂM-pa-ni",""],
+[18,2,"The meeting is on the seventh.","A reunião é no dia sete.","de MÍ-ting is on de SÉ-venth",""],
+[19,2,"Today is the eighth.","Hoje é dia oito.","tu-DÊI is de ÊITTH",""],
+[20,2,"The deadline is on the tenth.","O prazo é no dia dez.","de DÉD-lain is on de TÉNTH",""],
+[21,3,"Today is Monday.","Hoje é segunda-feira.","tu-DÊI is MÁN-dei",""],
+[22,3,"Tomorrow is Tuesday.","Amanhã é terça-feira.","tu-MÓ-rou is TIÚS-dei",""],
+[23,3,"Wednesday is a busy day.","Quarta-feira é um dia corrido.","UÉNS-dei is a BÍ-zi DÊI",""],
+[24,3,"I have a meeting on Thursday.","Eu tenho uma reunião na quinta-feira.","ai RÉV a MÍ-ting on THÊRS-dei",""],
+[25,3,"I usually work on Friday.","Eu geralmente trabalho na sexta-feira.","ai IÚ-ju-a-li UÓRK on FRÁI-dei",""],
+[26,3,"Saturday is my favorite day.","Sábado é meu dia favorito.","SÉ-ter-dei is mai FÊI-vo-rit DÊI",""],
+[27,3,"I like Sunday.","Eu gosto de domingo.","ai LÁIK SÁN-dei",""],
+[28,3,"I go to the gym on Monday.","Eu vou à academia na segunda-feira.","ai GÔU tu de DJIM on MÁN-dei",""],
+[29,3,"We have a meeting every Tuesday.","Nós temos uma reunião toda terça-feira.","uí RÉV a MÍ-ting É-vri TIÚS-dei",""],
+[30,3,"I don't work on Sunday.","Eu não trabalho no domingo.","ai DÔUNT UÓRK on SÁN-dei",""],
+[31,4,"My birthday is in December.","Meu aniversário é em dezembro.","mai BÊRTH-dei is in di-SÉM-ber",""],
+[32,4,"I like December the most.","Eu gosto mais de dezembro.","ai LÁIK di-SÉM-ber de MÔUST",""],
+[33,4,"January is the first month.","Janeiro é o primeiro mês.","DJÉ-niu-é-ri is de FÊRST MÁNTH",""],
+[34,4,"February is a short month.","Fevereiro é um mês curto.","FÉ-briu-é-ri is a SHÓRT MÁNTH",""],
+[35,4,"My vacation is in March.","Minhas férias são em março.","mai vei-KÊI-shon is in MÁRTCH",""],
+[36,4,"We have a project in April.","Nós temos um projeto em abril.","uí RÉV a PRÓ-djekt in ÊI-pril",""],
+[37,4,"May is a busy month.","Maio é um mês corrido.","MÊI is a BÍ-zi MÁNTH",""],
+[38,4,"I usually travel in June.","Eu geralmente viajo em junho.","ai IÚ-ju-a-li TRÉ-vol in DJÚN",""],
+[39,4,"July is my favorite month.","Julho é meu mês favorito.","dju-LÁI is mai FÊI-vo-rit MÁNTH",""],
+[40,4,"The project starts in August.","O projeto começa em agosto.","de PRÓ-djekt STÁRTS in Ó-gost",""],
+[41,5,"When is your birthday?","Quando é seu aniversário?","UÉN is iór BÊRTH-dei",""],
+[42,5,"My birthday is on December 19th.","Meu aniversário é em 19 de dezembro.","mai BÊRTH-dei is on di-SÉM-ber nain-TÍNTH",""],
+[43,5,"What day is your birthday this year?","Que dia é seu aniversário este ano?","UÓT DÊI is iór BÊRTH-dei dis IÍR",""],
+[44,5,"It's on the nineteenth.","É no dia dezenove.","its on de nain-TÍNTH",""],
+[45,5,"When is your mother's birthday?","Quando é o aniversário da sua mãe?","UÉN is iór MÁ-ders BÊRTH-dei",""],
+[46,5,"Her birthday is on September 11th.","O aniversário dela é em 11 de setembro.","rer BÊRTH-dei is on sep-TÉM-ber i-LÉV-enth",""],
+[47,5,"What's your favorite day of the week?","Qual é seu dia favorito da semana?","UÓTS iór FÊI-vo-rit DÊI ov de UÍK",""],
+[48,5,"Sunday is my favorite day.","Domingo é meu dia favorito.","SÁN-dei is mai FÊI-vo-rit DÊI",""],
+[49,5,"What month do you like the most?","De qual mês você gosta mais?","UÓT MÁNTH du iu LÁIK de MÔUST",""],
+[50,5,"I like December the most.","Eu gosto mais de dezembro.","ai LÁIK di-SÉM-ber de MÔUST",""]
+]},
+{ id:2, name:'DECK 2', title:'Work, Team & Problems', desc:'Trabalho diário, responsabilidades, ações, status do time, problemas', color:'#12777A',
+  cats:['Daily work','Responsibilities','Actions','Team status','Problems'],
+  items:[
+[1,1,"I am working on the tax reform.","Estou trabalhando na reforma tributária.","ai am UÓR-king on de TÉKS ri-FÓRM",""],
+[2,1,"I am working on a new project.","Estou trabalhando em um projeto novo.","ai am UÓR-king on a NIÚ PRÓ-djekt",""],
+[3,1,"I am working with my team.","Estou trabalhando com meu time.","ai am UÓR-king uíf mai TÍM",""],
+[4,1,"I work with customers every day.","Eu trabalho com clientes todos os dias.","ai UÓRK uíf CÁS-to-mers É-vri DÊI",""],
+[5,1,"I usually work with developers.","Eu geralmente trabalho com desenvolvedores.","ai IÚ-ju-a-li UÓRK uíf de-VÉ-lo-pers",""],
+[6,1,"My team works with Dynamics 365.","Meu time trabalha com Dynamics 365.","mai TÍM UÓRKS uíf dai-NÉ-miks fríi-SÍKS-ti-FÁIV",""],
+[7,1,"We work on financial operations.","Nós trabalhamos com operações financeiras.","uí UÓRK on fai-NÉN-shal o-pe-RÊI-shons",""],
+[8,1,"We are testing the ERP system.","Estamos testando o sistema ERP.","uí ar TÉS-ting de i-ar-PÍ SÍS-tem",""],
+[9,1,"We are deploying the ERP.","Estamos implantando o ERP.","uí ar di-PLÓI-ing de i-ar-PÍ",""],
+[10,1,"We are working on a new project.","Estamos trabalhando em um projeto novo.","uí ar UÓR-king on a NIÚ PRÓ-djekt",""],
+[11,2,"My team is responsible for the ERP system.","Meu time é responsável pelo sistema ERP.","mai TÍM is ris-PÓN-si-bol for de i-ar-PÍ SÍS-tem",""],
+[12,2,"My team is responsible for financial operations.","Meu time é responsável pelas operações financeiras.","mai TÍM is ris-PÓN-si-bol for fai-NÉN-shal o-pe-RÊI-shons",""],
+[13,2,"My team is responsible for security.","Meu time é responsável pela segurança.","mai TÍM is ris-PÓN-si-bol for si-KIÚ-ri-ti",""],
+[14,2,"I am responsible for the team.","Eu sou responsável pelo time.","ai am ris-PÓN-si-bol for de TÍM",""],
+[15,2,"I am responsible for making sure the project is completed on time.","Sou responsável por garantir que o projeto seja concluído no prazo.","ai am ris-PÓN-si-bol for MÊI-king SHÚR de PRÓ-djekt is com-PLÍ-ted on TÁIM",""],
+[16,2,"I make sure the team finishes the work on time.","Eu garanto que o time termina o trabalho no prazo.","ai mêik SHÚR de TÍM FÍ-ni-shes de UÓRK on TÁIM",""],
+[17,2,"I make sure the system works correctly.","Eu garanto que o sistema funciona corretamente.","ai mêik SHÚR de SÍS-tem UÓRKS co-RÉKT-li",""],
+[18,2,"I need to make sure everything is working correctly.","Preciso garantir que tudo está funcionando corretamente.","ai NÍD tu mêik SHÚR É-vri-thing is UÓR-king co-RÉKT-li",""],
+[19,2,"Our goal is to finish the project on time.","Nosso objetivo é terminar o projeto no prazo.","áuer GÔUL is tu FÍ-nish de PRÓ-djekt on TÁIM",""],
+[20,2,"Our goal is to make sure the project is successful.","Nosso objetivo é garantir que o projeto seja bem-sucedido.","áuer GÔUL is tu mêik SHÚR de PRÓ-djekt is suk-SÉS-ful",""],
+[21,3,"I need to check the system.","Preciso verificar o sistema.","ai NÍD tu TCHÉK de SÍS-tem",""],
+[22,3,"I need to check the problem.","Preciso verificar o problema.","ai NÍD tu TCHÉK de PRÓ-blem",""],
+[23,3,"I need to talk to the developer.","Preciso falar com o desenvolvedor.","ai NÍD tu TÓK tu de de-VÉ-lo-per",""],
+[24,3,"I need to talk to my team.","Preciso falar com meu time.","ai NÍD tu TÓK tu mai TÍM",""],
+[25,3,"I need to review the process.","Preciso revisar o processo.","ai NÍD tu ri-VIÚ de PRÓ-ses",""],
+[26,3,"I need to test the system.","Preciso testar o sistema.","ai NÍD tu TÉST de SÍS-tem",""],
+[27,3,"I need to solve this problem.","Preciso resolver este problema.","ai NÍD tu SÓLV dis PRÓ-blem",""],
+[28,3,"I need to update the customer.","Preciso atualizar o cliente.","ai NÍD tu ap-DÊIT de CÁS-to-mer",""],
+[29,3,"I'll check this.","Vou verificar isso.","áil TCHÉK dis",""],
+[30,3,"I'll talk to the team.","Vou falar com o time.","áil TÓK tu de TÍM",""],
+[31,4,"Adriano is working on the tax reform.","Adriano está trabalhando na reforma tributária.","a-dri-Á-no is UÓR-king on de TÉKS ri-FÓRM",""],
+[32,4,"Alison is working on licenses and user groups.","Alison está trabalhando em licenças e grupos de usuários.","Á-li-son is UÓR-king on LÁI-sen-ses end IÚ-zer GRÚPS",""],
+[33,4,"Dantas is testing the ERP.","Dantas está testando o ERP.","DÁN-tas is TÉS-ting de i-ar-PÍ",""],
+[34,4,"Everton is reviewing tickets.","Everton está revisando os chamados.","É-ver-ton is ri-VIÚ-ing TÍ-kets",""],
+[35,4,"Gustavo is working on the system configuration.","Gustavo está trabalhando na configuração do sistema.","gus-TÁ-vo is UÓR-king on de SÍS-tem con-fi-guiu-RÊI-shon",""],
+[36,4,"Tiago is checking access requests.","Tiago está verificando as solicitações de acesso.","ti-Á-go is TCHÉ-king ÉK-ses ri-KUÉSTS",""],
+[37,4,"The team is working on several projects.","O time está trabalhando em vários projetos.","de TÍM is UÓR-king on SÉ-ve-ral PRÓ-djekts",""],
+[38,4,"The team is working on it right now.","O time está trabalhando nisso agora.","de TÍM is UÓR-king on it ráit NÁU",""],
+[39,4,"We have several tasks to complete.","Temos várias tarefas para concluir.","uí RÉV SÉ-ve-ral TÉSKS tu com-PLÍT",""],
+[40,4,"Each developer has different tasks.","Cada desenvolvedor tem tarefas diferentes.","ÍTCH de-VÉ-lo-per RÉZ DÍ-fe-rent TÉSKS",""],
+[41,5,"We have a problem with the system.","Temos um problema com o sistema.","uí RÉV a PRÓ-blem uíf de SÍS-tem",""],
+[42,5,"We are investigating the problem.","Estamos investigando o problema.","uí ar in-VÉS-ti-guêi-ting de PRÓ-blem",""],
+[43,5,"We are trying to find a solution.","Estamos tentando encontrar uma solução.","uí ar TRÁI-ing tu FÁIND a so-LÚ-shon",""],
+[44,5,"We need to solve this problem.","Precisamos resolver este problema.","uí NÍD tu SÓLV dis PRÓ-blem",""],
+[45,5,"The main problem is the integration.","O principal problema é a integração.","de MÊIN PRÓ-blem is de in-te-GRÊI-shon",""],
+[46,5,"We need to understand what happened.","Precisamos entender o que aconteceu.","uí NÍD tu an-der-STÉND uót RÉ-pend",""],
+[47,5,"I'll check what happened.","Vou verificar o que aconteceu.","áil TCHÉK uót RÉ-pend",""],
+[48,5,"We're working on a solution.","Estamos trabalhando em uma solução.","uír UÓR-king on a so-LÚ-shon",""],
+[49,5,"I think we are going in the right direction.","Acho que estamos indo na direção certa.","ai THÍNK uí ar GÔU-ing in de RÁIT di-RÉK-shon",""],
+[50,5,"Everything is working correctly now.","Tudo está funcionando corretamente agora.","É-vri-thing is UÓR-king co-RÉKT-li NÁU",""]
+]},
+{ id:3, name:'DECK 3', title:'Everyday Work Phrases', desc:'Ações e planos, pedir ajuda, opiniões, status e prazos, equipe', color:'#6B3FA0',
+  cats:['Doing & planning','Asking for help','Opinions','Status','Team & goals'],
+  items:[
+[1,1,"I'm arriving now.","Estou chegando agora.","áim a-RÁI-ving NÁU","I'm + verb-ing"],
+[2,1,"I'm working on it.","Estou trabalhando nisso.","áim UÓR-king on it","work on"],
+[3,1,"I'm working on this project.","Estou trabalhando nesse projeto.","áim UÓR-king on dis PRÓ-djekt","work on + noun"],
+[4,1,"I'm checking it.","Estou verificando isso.","áim TCHÉ-king it","check"],
+[5,1,"I'm trying to solve it.","Estou tentando resolver isso.","áim TRÁI-ing tu SÓLV it","try to + verb"],
+[6,1,"I need to check it.","Preciso verificar isso.","ai NÍD tu TCHÉK it","need to + verb"],
+[7,1,"I need to talk to him.","Preciso falar com ele.","ai NÍD tu TÓK tu rim","need to"],
+[8,1,"I'll check and get back to you.","Vou verificar e te retorno.","áil TCHÉK end guét BÉK tu iú","will"],
+[9,1,"I'll check it tomorrow.","Vou verificar isso amanhã.","áil TCHÉK it tu-MÓ-rou","I'll + verb"],
+[10,1,"I can check that for you.","Posso verificar isso para você.","ai KÉN TCHÉK dét for iú","can + verb"],
+[11,2,"Can you help me?","Você pode me ajudar?","kén iu RÉLP mi","Can you...?"],
+[12,2,"Can you explain it again?","Você pode explicar novamente?","kén iu eks-PLÊIN it a-GUÉN","Can you...?"],
+[13,2,"Can you give me an example?","Você pode me dar um exemplo?","kén iu GUÍV mi an eg-ZÉM-pol","Can you...?"],
+[14,2,"I didn't understand.","Não entendi.","ai DÍ-dent an-der-STÉND","past simple"],
+[15,2,"Can you repeat that, please?","Pode repetir, por favor?","kén iu ri-PÍT dét, PLÍS","Can you...?"],
+[16,2,"Can you speak more slowly?","Pode falar mais devagar?","kén iu SPÍK mór SLÔU-li","Can you...?"],
+[17,2,"Let me check.","Deixe-me verificar.","LÉT mi TCHÉK","Let me + verb"],
+[18,2,"Let me think.","Deixe-me pensar.","LÉT mi THÍNK","Let me + verb"],
+[19,2,"I think so.","Acho que sim.","ai THÍNK sôu","I think so"],
+[20,2,"I don't think so.","Acho que não.","ai DÔUNT THÍNK sôu","I don't think so"],
+[21,3,"I'm not sure.","Não tenho certeza.","áim nót SHÚR","I'm not sure"],
+[22,3,"I'm sure.","Tenho certeza.","áim SHÚR","I'm sure"],
+[23,3,"That makes sense.","Isso faz sentido.","dét MÊIKS SÉNS","make sense"],
+[24,3,"That doesn't make sense.","Isso não faz sentido.","dét DÁ-zent mêik SÉNS","doesn't"],
+[25,3,"What's the problem?","Qual é o problema?","UÓTS de PRÓ-blem","What's...?"],
+[26,3,"What's the next step?","Qual é o próximo passo?","UÓTS de NÉKST STÉP","What's...?"],
+[27,3,"What happened?","O que aconteceu?","uót RÉ-pend","past simple"],
+[28,3,"What do you need?","O que você precisa?","UÓT du iu NÍD","What do...?"],
+[29,3,"When do you need it?","Quando você precisa disso?","UÉN du iu NÍD it","When do...?"],
+[30,3,"Can we talk about it later?","Podemos falar sobre isso depois?","kén uí TÓK a-BÁUT it LÊI-ter","Can we...?"],
+[31,4,"We're almost finished.","Estamos quase terminando.","uír ÓL-môust FÍ-nisht","almost"],
+[32,4,"We're done.","Já terminamos.","uír DÁN","be done"],
+[33,4,"We're still working on it.","Ainda estamos trabalhando nisso.","uír STÍL UÓR-king on it","still + verb-ing"],
+[34,4,"We're behind schedule.","Estamos atrasados.","uír bi-RÁIND SKÉ-djul","behind schedule"],
+[35,4,"We're on schedule.","Estamos dentro do prazo.","uír on SKÉ-djul","on schedule"],
+[36,4,"We need to meet the deadline.","Precisamos cumprir o prazo.","uí NÍD tu MÍT de DÉD-lain","meet the deadline"],
+[37,4,"We need to solve this quickly.","Precisamos resolver isso rapidamente.","uí NÍD tu SÓLV dis KUÍK-li","need to"],
+[38,4,"I'll take care of it.","Vou cuidar disso.","áil têik KÉR ov it","take care of"],
+[39,4,"I take care of this process.","Eu cuido desse processo.","ai têik KÉR ov dis PRÓ-ses","present simple"],
+[40,4,"I'm responsible for it.","Estou responsável por isso.","áim ris-PÓN-si-bol for it","responsible for"],
+[41,5,"I'm responsible for this team.","Sou responsável por essa equipe.","áim ris-PÓN-si-bol for dis TÍM","responsible for"],
+[42,5,"My team works with Dynamics 365.","Minha equipe trabalha com Dynamics 365.","mai TÍM UÓRKS uíf dai-NÉ-miks fríi-SÍKS-ti-FÁIV","works with"],
+[43,5,"My team has five developers.","Minha equipe tem cinco desenvolvedores.","mai TÍM RÉZ FÁIV de-VÉ-lo-pers","has"],
+[44,5,"We have a meeting every day.","Temos uma reunião todos os dias.","uí RÉV a MÍ-ting É-vri DÊI","have"],
+[45,5,"Our meeting starts at 8 a.m.","Nossa reunião começa às 8.","áuer MÍ-ting STÁRTS at ÊIT êi-ÉM","starts"],
+[46,5,"We're working on the tax reform.","Estamos trabalhando na reforma tributária.","uír UÓR-king on de TÉKS ri-FÓRM","work on"],
+[47,5,"We're testing the system.","Estamos testando o sistema.","uír TÉS-ting de SÍS-tem","be + verb-ing"],
+[48,5,"We need to ensure security.","Precisamos garantir a segurança.","uí NÍD tu en-SHÚR si-KIÚ-ri-ti","ensure"],
+[49,5,"We need to make sure the project finishes on time.","Precisamos garantir que o projeto termine no prazo.","uí NÍD tu mêik SHÚR de PRÓ-djekt FÍ-ni-shes on TÁIM","make sure"],
+[50,5,"I think we're going in the right direction.","Acho que estamos indo na direção certa.","ai THÍNK uír GÔU-ing in de RÁIT di-RÉK-shon","right direction"]
+]},
+{ id:4, name:'DECK 4', title:'Dates, Sports & Daily Life', desc:'Aniversários, favoritos e férias, esportes, vida diária, aprendizado', color:'#E8681C',
+  cats:['Birthdays','Favorites','Sports','Daily life','Team & learning'],
+  items:[
+[1,1,"When is your birthday?","Quando é seu aniversário?","UÉN is iór BÊRTH-dei","Birthday"],
+[2,1,"My birthday is on the nineteenth of December.","Meu aniversário é em 19 de dezembro.","mai BÊRTH-dei is on de nain-TÍNTH ov di-SÉM-ber","Ordinal"],
+[3,1,"My birthday is on December 19th.","Meu aniversário é em 19 de dezembro.","mai BÊRTH-dei is on di-SÉM-ber nain-TÍNTH","Date"],
+[4,1,"My birthday is on the nineteenth.","Meu aniversário é no dia 19.","mai BÊRTH-dei is on de nain-TÍNTH","19th"],
+[5,1,"What day is your birthday this year?","Que dia é seu aniversário este ano?","UÓT DÊI is iór BÊRTH-dei dis IÍR","Date"],
+[6,1,"It's on the nineteenth.","É no dia 19.","its on de nain-TÍNTH","Ordinal"],
+[7,1,"When is your mother's birthday?","Quando é o aniversário da sua mãe?","UÉN is iór MÁ-ders BÊRTH-dei","Possessive"],
+[8,1,"Her birthday is on the eleventh of September.","O aniversário dela é em 11 de setembro.","rer BÊRTH-dei is on de i-LÉV-enth ov sep-TÉM-ber","11th"],
+[9,1,"Her birthday is on September 11th.","O aniversário dela é em 11 de setembro.","rer BÊRTH-dei is on sep-TÉM-ber i-LÉV-enth","Date"],
+[10,1,"My birthday is in December.","Meu aniversário é em dezembro.","mai BÊRTH-dei is in di-SÉM-ber","in + month"],
+[11,2,"What's your favorite day of the week?","Qual é seu dia favorito da semana?","UÓTS iór FÊI-vo-rit DÊI ov de UÍK","Week"],
+[12,2,"My favorite day is Sunday.","Meu dia favorito é domingo.","mai FÊI-vo-rit DÊI is SÁN-dei","Day"],
+[13,2,"I like Sunday the most.","Eu gosto mais de domingo.","ai LÁIK SÁN-dei de MÔUST","the most"],
+[14,2,"What month do you like the most?","Qual mês você mais gosta?","UÓT MÁNTH du iu LÁIK de MÔUST","Month"],
+[15,2,"I like December the most.","Eu gosto mais de dezembro.","ai LÁIK di-SÉM-ber de MÔUST","Month"],
+[16,2,"What's your favorite month?","Qual é seu mês favorito?","UÓTS iór FÊI-vo-rit MÁNTH","Favorite"],
+[17,2,"My favorite month is December.","Meu mês favorito é dezembro.","mai FÊI-vo-rit MÁNTH is di-SÉM-ber","Month"],
+[18,2,"When is your next vacation?","Quando são suas próximas férias?","UÉN is iór NÉKST vei-KÊI-shon","Vacation"],
+[19,2,"My vacation is in October.","Minhas férias são em outubro.","mai vei-KÊI-shon is in ok-TÔU-ber","in + month"],
+[20,2,"I'm going on vacation in December.","Vou viajar em dezembro.","áim GÔU-ing on vei-KÊI-shon in di-SÉM-ber","Vacation"],
+[21,3,"What day do you usually go to the gym?","Em que dia você costuma ir à academia?","UÓT DÊI du iu IÚ-ju-a-li GÔU tu de DJIM","Usually"],
+[22,3,"I usually go to the gym on Monday.","Eu costumo ir à academia na segunda-feira.","ai IÚ-ju-a-li GÔU tu de DJIM on MÁN-dei","on + day"],
+[23,3,"I go to the gym three times a week.","Eu vou à academia três vezes por semana.","ai GÔU tu de DJIM fríi TÁIMS a UÍK","Frequency"],
+[24,3,"I go running three times a week.","Eu corro três vezes por semana.","ai GÔU RÁ-ning fríi TÁIMS a UÍK","Sports"],
+[25,3,"I play beach volleyball.","Eu jogo vôlei de praia.","ai PLÊI BÍTCH VÓ-li-ból","Sports"],
+[26,3,"I like running marathons.","Eu gosto de correr maratonas.","ai LÁIK RÁ-ning MÉ-ra-thons","Running"],
+[27,3,"I play sports because I enjoy them.","Eu pratico esportes porque gosto.","ai PLÊI SPÓRTS bi-KÓZ ai en-DJÓI dem","Because"],
+[28,3,"I play sports to improve my health.","Eu pratico esportes para melhorar minha saúde.","ai PLÊI SPÓRTS tu im-PRÚV mai RÉLTH","Purpose"],
+[29,3,"It improves my health.","Isso melhora minha saúde.","it im-PRÚVS mai RÉLTH","Improve"],
+[30,3,"It makes my muscles stronger.","Isso deixa meus músculos mais fortes.","it MÊIKS mai MÁ-sols STRÓN-guer","Stronger"],
+[31,4,"I had a nightmare last night.","Eu tive um pesadelo ontem à noite.","ai RÉD a NÁIT-mér lést NÁIT","Nightmare"],
+[32,4,"I had a terrible nightmare.","Eu tive um pesadelo terrível.","ai RÉD a TÉ-ri-bol NÁIT-mér","Past"],
+[33,4,"I was really pissed off.","Eu estava muito irritado.","ai uós RÍ-li PÍST ÓF","informal · formal: I was really annoyed"],
+[34,4,"I was pissed off when he closed the door.","Fiquei irritado quando ele fechou a porta.","ai uós PÍST ÓF uén ri CLÔUZD de DÓR","When"],
+[35,4,"I couldn't find a parking spot.","Não consegui encontrar uma vaga.","ai KÚ-dent FÁIND a PÁR-king SPÓT","Parking"],
+[36,4,"That guy parked in my spot.","Aquele cara estacionou na minha vaga.","dét GÁI PÁRKT in mai SPÓT","Past"],
+[37,4,"I need a parking spot.","Eu preciso de uma vaga para estacionar.","ai NÍD a PÁR-king SPÓT","Need"],
+[38,4,"I have a lot of stuff to do.","Tenho muitas coisas para fazer.","ai RÉV a LÓT ov STÁF tu DÚ","Stuff"],
+[39,4,"Some of my stuff is broken.","Algumas das minhas coisas estão quebradas.","SÁM ov mai STÁF is BRÔU-ken","Stuff"],
+[40,4,"Sexism is a serious problem.","O sexismo é um problema sério.","SÉK-si-zem is a SÍ-ri-os PRÓ-blem","Sexism"],
+[41,5,"Women face sexism every day.","As mulheres enfrentam o sexismo todos os dias.","UÍ-men FÊIS SÉK-si-zem É-vri DÊI","Women"],
+[42,5,"Women have to fight sexism.","As mulheres precisam lutar contra o sexismo.","UÍ-men RÉV tu FÁIT SÉK-si-zem","Have to"],
+[43,5,"My team works together.","Minha equipe trabalha junta.","mai TÍM UÓRKS tu-GUÉ-der","Team"],
+[44,5,"My team has five developers.","Minha equipe tem cinco desenvolvedores.","mai TÍM RÉZ FÁIV de-VÉ-lo-pers","Has"],
+[45,5,"I work with my team every day.","Eu trabalho com minha equipe todos os dias.","ai UÓRK uíf mai TÍM É-vri DÊI","Present"],
+[46,5,"Yesterday, I watched a video.","Ontem eu assisti a um vídeo.","IÉS-ter-dei, ai UÓTCHT a VÍ-di-ou","Past"],
+[47,5,"Today, I'm reviewing my exercise.","Hoje estou revisando meu exercício.","tu-DÊI, áim ri-VIÚ-ing mai ÉK-ser-sáiz","Present continuous"],
+[48,5,"In the last class, the teacher taught us ordinal and cardinal numbers.","Na última aula, o professor nos ensinou números ordinais e cardinais.","in de LÉST CLÉS, de TÍ-tcher TÓT as ÓR-di-nal end CÁR-di-nal NÁM-bers","Taught"],
+[49,5,"Today, we're going to continue the exercises.","Hoje vamos continuar os exercícios.","tu-DÊI, uír GÔU-ing tu con-TÍ-niu de ÉK-ser-sái-zes","Going to"],
+[50,5,"I'm learning English one day at a time.","Estou aprendendo inglês um dia de cada vez.","áim LÊR-ning ÍN-glish UÁN DÊI at a TÁIM","Fluency"]
+]}
+];
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try { const v = localStorage.getItem('eng_'+k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem('eng_'+k, JSON.stringify(v)); } catch(e){} }
+};
+
+let curDeck = null, deck = [], i = 0, cat = 'all';
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+  $('btnBack').style.display = id === 'scHome' ? 'none' : 'flex';
+  window.scrollTo(0,0);
+}
+
+function renderHome(){
+  const list = $('deckList');
+  list.innerHTML = '';
+  DECKS.forEach(d => {
+    const b = document.createElement('button');
+    b.className = 'deckcard';
+    b.innerHTML = '<span class="tag" style="background:'+d.color+'">'+d.name+'</span>'
+      + '<h2>'+d.title+'</h2><p>'+d.desc+'</p>';
+    b.onclick = () => openDeck(d.id);
+    list.appendChild(b);
+  });
+  const all = document.createElement('button');
+  all.className = 'deckcard';
+  all.innerHTML = '<span class="tag" style="background:#5F5E5A">TUDO</span><h2>Todas as 200 frases</h2><p>Os quatro decks juntos, em ordem ou embaralhados</p>';
+  all.onclick = () => openDeck(0);
+  list.appendChild(all);
+  $('title').textContent = 'My English';
+}
+
+function deckItems(id){
+  if(id === 0){
+    const out = [];
+    DECKS.forEach(d => d.items.forEach(it => out.push([d.name+' #'+it[0], d.id, it[2], it[3], it[4], it[5]])));
+    return out;
+  }
+  const d = DECKS.find(x => x.id === id);
+  return d.items.map(it => ['#'+it[0], it[1], it[2], it[3], it[4], it[5]]);
+}
+
+function openDeck(id){
+  curDeck = id;
+  cat = 'all';
+  const chips = $('chips');
+  chips.innerHTML = '';
+  const mk = (label, value) => {
+    const c = document.createElement('button');
+    c.className = 'chip' + (value === 'all' ? ' on' : '');
+    c.textContent = label;
+    c.onclick = () => {
+      chips.querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+      c.classList.add('on');
+      cat = value; applyCat();
+    };
+    chips.appendChild(c);
+  };
+  if(id === 0){
+    mk('Todas (200)', 'all');
+    DECKS.forEach(d => mk(d.name, String(d.id)));
+    $('title').textContent = 'Todas as frases';
+  } else {
+    const d = DECKS.find(x => x.id === id);
+    mk('Todas (50)', 'all');
+    d.cats.forEach((n, k) => mk((k+1)+'. '+n, String(k+1)));
+    $('title').textContent = d.name + ' — ' + d.title;
+  }
+  applyCat();
+  showScreen('scDeck');
+}
+
+function applyCat(){
+  const all = deckItems(curDeck);
+  deck = cat === 'all' ? all : all.filter(x => String(x[1]) === cat);
+  i = 0;
+  render();
+}
+
+function render(){
+  if(!deck.length) return;
+  const c = deck[i];
+  $('card').classList.remove('flipped');
+  $('enText').textContent = c[2];
+  $('ptText').textContent = c[3];
+  $('pronText').textContent = c[4];
+  $('structText').textContent = c[5] || '';
+  $('b1').textContent = $('b2').textContent = c[0];
+  const col = COLORS[(c[1]-1) % COLORS.length];
+  $('b1').style.background = $('b2').style.background = col;
+  $('counter').textContent = (i+1) + '/' + deck.length;
+  $('bar').style.width = ((i+1) / deck.length * 100) + '%';
+}
+
+function go(n){
+  i = (i + n + deck.length) % deck.length;
+  render();
+}
+
+function flip(){
+  const c = $('card');
+  c.classList.toggle('flipped');
+  if(c.classList.contains('flipped') && $('autosay').checked) speak();
+}
+
+$('card').addEventListener('click', e => { if(!e.target.closest('.speak')) flip(); });
+$('next').onclick = () => go(1);
+$('prev').onclick = () => go(-1);
+$('shuffle').onclick = () => {
+  for(let k = deck.length - 1; k > 0; k--){ const j = Math.floor(Math.random()*(k+1)); [deck[k],deck[j]] = [deck[j],deck[k]]; }
+  i = 0; render();
+};
+$('btnBack').onclick = () => { showScreen(curDeck === null ? 'scHome' : ($('scSettings').classList.contains('active') ? 'scDeck' : 'scHome')); if(!$('scDeck').classList.contains('active')) renderHome(); };
+$('btnSettings').onclick = () => showScreen('scSettings');
+
+let tx = 0, ty = 0;
+const stage = document.querySelector('.stage');
+stage.addEventListener('touchstart', e => { tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY; }, {passive:true});
+stage.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5){ go(dx < 0 ? 1 : -1); }
+}, {passive:true});
+
+const synth = window.speechSynthesis;
+let voices = [];
+function qscore(v){ const n = (v.name||'').toLowerCase(); let s = 0; if(/natural|neural|online|premium|enhanced|siri/.test(n)) s += 100; if(/en-us/i.test(v.lang)) s += 10; if(/google/.test(n)) s += 20; return s; }
+function loadVoices(){
+  voices = (synth.getVoices()||[]).filter(v => /^en/i.test(v.lang)).sort((a,b) => qscore(b)-qscore(a));
+  const sel = $('voice');
+  sel.innerHTML = '';
+  if(!voices.length){ const o = document.createElement('option'); o.textContent = 'Nenhuma voz em inglês'; sel.appendChild(o); return; }
+  voices.forEach((v,k) => { const o = document.createElement('option'); o.value = k; o.textContent = v.name; sel.appendChild(o); });
+  const saved = store.get('voiceName', null);
+  const idx = saved ? voices.findIndex(v => v.name === saved) : -1;
+  sel.value = idx >= 0 ? idx : 0;
+}
+loadVoices();
+synth.onvoiceschanged = loadVoices;
+$('voice').onchange = () => { const v = voices[Number($('voice').value)]; if(v) store.set('voiceName', v.name); };
+$('rate').value = store.get('rate', 0.7);
+$('rateOut').textContent = Number($('rate').value).toFixed(1);
+$('rate').oninput = () => { $('rateOut').textContent = Number($('rate').value).toFixed(1); store.set('rate', Number($('rate').value)); };
+$('autosay').checked = store.get('autosay', false);
+$('autosay').onchange = () => store.set('autosay', $('autosay').checked);
+
+function speak(){
+  if(!deck.length) return;
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(deck[i][2]);
+  const v = voices[Number($('voice').value)];
+  if(v){ u.voice = v; u.lang = v.lang; } else { u.lang = 'en-US'; }
+  u.rate = Number($('rate').value);
+  synth.speak(u);
+}
+$('s1').onclick = e => { e.stopPropagation(); speak(); };
+$('s2').onclick = e => { e.stopPropagation(); speak(); };
+
+renderHome();
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js')
+    .then(() => { $('swInfo').textContent = 'Modo offline ativo. O app funciona sem internet.'; })
+    .catch(() => { $('swInfo').textContent = 'Modo offline indisponível (o app precisa estar publicado em HTTPS).'; });
+} else {
+  $('swInfo').textContent = 'Este navegador não suporta modo offline.';
+}
+</script>
+</body>
+</html>
